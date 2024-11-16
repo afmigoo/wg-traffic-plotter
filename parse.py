@@ -16,12 +16,10 @@ plot_dir = root_dir.joinpath('plots')
 diff_dir = plot_dir.joinpath('diff')
 total_dir = plot_dir.joinpath('total')
 templates_dir = root_dir.joinpath('templates')
-html_dir = root_dir.joinpath('html')
 
 plot_dir.mkdir(exist_ok=True)
 diff_dir.mkdir(exist_ok=True)
 total_dir.mkdir(exist_ok=True)  
-html_dir.mkdir(exist_ok=True)
 
 def restore_total(arr: List[Dict[str, Union[str, List[int]]]], inner_idx: int, new_val: int) -> int:
     """Sometimes server reboots and resets total. In this case prev val is -1
@@ -128,7 +126,7 @@ def generate_plots_plt(user_data: Dict[str, List[Dict[str, Union[str, List[int]]
              timestamps, rcv_total, sent_total,
              total_dir.joinpath(f"{user_key.replace('/', '')}.svg"))
             
-def generate_plots_jinja(user_data: Dict[str, List[Dict[str, Union[str, List[int]]]]]) -> None:
+def generate_plots_jinja(user_data: Dict[str, List[Dict[str, Union[str, List[int]]]]], output_file: Path) -> None:
     env = Environment(loader=FileSystemLoader(templates_dir))
     template = env.get_template('index.html')
     
@@ -147,7 +145,7 @@ def generate_plots_jinja(user_data: Dict[str, List[Dict[str, Union[str, List[int
             len(user_stat[i]['rcv_diff']) == len(user_stat[i]['sent_diff']) == \
             len(user_stat[i]['rcv_total']) == len(user_stat[i]['sent_total'])
 
-    with open(html_dir.joinpath('plots.html'), 'w', encoding='utf-8') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         f.write(template.render(
             user_keys = user_keys,
             user_stat = user_stat
@@ -155,27 +153,31 @@ def generate_plots_jinja(user_data: Dict[str, List[Dict[str, Union[str, List[int
 
 def main():
     def usage():
-        print("Args: <filename> <renderer>\n" +\
-              " filename - input log file\n"
+        print("Args: <input log file> <output html file>"
               #" renderer - web (render html with plots) or plt (render plot images)"
         )
-    filename = Path(sys.argv[1]) if len(sys.argv) > 1 else None
-    if not filename.is_file():
-        print(f'file \'{filename}\' does not exist')
+    input_file = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    if not input_file.is_file():
+        print(f'file \'{input_file}\' does not exist')
         usage(); exit(1)
+    output_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+    if output_file is None:
+        print(f'output file required')
+        usage(); exit(1)
+
     """ renderer = sys.argv[2] if len(sys.argv) > 2 else None
     if not renderer in ['web', 'plt']:
         print(f'renderer \'{renderer}\' is invalid')
         usage(); exit(1) """
     renderer = 'web'
 
-    user_data = parse(filename)
+    user_data = parse(input_file)
     for d in user_data.values():
         assert sum(x['diff'][0] for x in d if x['diff'][0] != -1) == d[-1]['total'][0]
         assert sum(x['diff'][1] for x in d if x['diff'][1] != -1) == d[-1]['total'][1]
     
     if renderer == 'web':
-        generate_plots_jinja(user_data)
+        generate_plots_jinja(user_data, output_file)
     elif renderer == 'plt':
         generate_plots_plt(user_data)
 

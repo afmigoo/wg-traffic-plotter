@@ -1,0 +1,7 @@
+.vscode/
+html/
+plots/
+venv/
+
+traffic.log
+update_log.sh

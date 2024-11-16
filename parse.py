@@ -21,42 +21,15 @@ plot_dir.mkdir(exist_ok=True)
 diff_dir.mkdir(exist_ok=True)
 total_dir.mkdir(exist_ok=True)  
 
-def restore_total(arr: List[Dict[str, Union[str, List[int]]]], inner_idx: int, new_val: int) -> int:
-    """Sometimes server reboots and resets total. In this case prev val is -1
-       This func restores total from before reboot if it exists."""
+def calc_diff(arr: List[Dict[str, Union[str, List[int]]]], inner_idx: int, new_val: int) -> int:
     if len(arr) == 0:
         return new_val
-    # if prev log is reboot
-    if arr[-1]['total'][inner_idx] == -1:
-        # looking for last val
-        last_pos = -1
-        for i in range(len(arr) - 1, -1, -1):
-            if arr[i]['total'][inner_idx] != -1:
-                last_pos = i
-                break
-        # if not found we think current total is the total
-        if last_pos == -1:
-            return new_val
-        return arr[last_pos]['total'][inner_idx] + new_val
-    # if prev total is bigger than new total 
-    # all totals after reboots are smaller than true total
-    if arr[-1]['total'][inner_idx] > new_val:
-        return arr[-1]['total'][inner_idx] + new_val
-    return new_val
-
-def calc_diff(arr: List[Dict[str, Union[str, List[int]]]], inner_idx: int, new_val: int) -> int:
-    last_total = -1
-    for i in range(len(arr) - 1, -1, -1):
-        if arr[i]['total'][inner_idx] != -1:
-            last_total = i
-            break
-    if last_total == -1:
-        return new_val
-    return new_val - arr[last_total]['total'][inner_idx]
+    return new_val - arr[-1]['total'][inner_idx]
 
 def parse(filename: Path, client_names: Dict[str, str]) -> Dict[str, List[Dict[str, Union[str, List[int]]]]]:
     user_data = defaultdict(list)
     with open(filename, 'r', encoding='utf-8') as f:
+        reboot_memo = {}
         for line in f:
             timestamp_r = r'\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}'
             match = re.search(fr'\[({timestamp_r})\] (.*)', line)
@@ -67,12 +40,9 @@ def parse(filename: Path, client_names: Dict[str, str]) -> Dict[str, List[Dict[s
                 exit(1)
 
             if data == 'System boot':
-                for d in user_data.values():
-                    d.append({
-                        'timestamp': timestamp,
-                        'total': [-1, -1],
-                        'diff': [-1, -1]
-                    })
+                for v, d in user_data.items():
+                    if len(d) > 0:
+                        reboot_memo[v] = d[-1]['total']
             elif data == 'Transfer bytes':
                 continue
             else:
@@ -80,10 +50,12 @@ def parse(filename: Path, client_names: Dict[str, str]) -> Dict[str, List[Dict[s
                 # hiding public key and using client-name as user id
                 if user_key in client_names:
                     user_key = client_names[user_key]
+                
                 recieved, sent = int(recieved), int(sent)
+                if user_key in reboot_memo:
+                    recieved += reboot_memo[user_key][0]
+                    sent += reboot_memo[user_key][1]
 
-                recieved = restore_total(user_data[user_key], 0, recieved)
-                sent = restore_total(user_data[user_key], 1, sent)
                 rcv_diff = calc_diff(user_data[user_key], 0, recieved)
                 sent_diff = calc_diff(user_data[user_key], 1, sent)
                 

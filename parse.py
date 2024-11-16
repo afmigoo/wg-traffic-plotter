@@ -54,7 +54,7 @@ def calc_diff(arr: List[Dict[str, Union[str, List[int]]]], inner_idx: int, new_v
         return new_val
     return new_val - arr[last_total]['total'][inner_idx]
 
-def parse(filename: Path) -> Dict[str, List[Dict[str, Union[str, List[int]]]]]:
+def parse(filename: Path, client_names: Dict[str, str]) -> Dict[str, List[Dict[str, Union[str, List[int]]]]]:
     user_data = defaultdict(list)
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
@@ -77,6 +77,9 @@ def parse(filename: Path) -> Dict[str, List[Dict[str, Union[str, List[int]]]]]:
                 continue
             else:
                 user_key, recieved, sent = data.split(',')
+                # hiding public key and using client-name as user id
+                if user_key in client_names:
+                    user_key = client_names[user_key]
                 recieved, sent = int(recieved), int(sent)
 
                 recieved = restore_total(user_data[user_key], 0, recieved)
@@ -91,6 +94,20 @@ def parse(filename: Path) -> Dict[str, List[Dict[str, Union[str, List[int]]]]]:
                 })
 
     return user_data
+
+def parse_wgconf(filename: Path) -> Dict[str, str]:
+    """returns dict of <client-name>: <client-pubkey>"""
+    with open(filename, 'r', encoding='utf-8') as f:
+        cur_client = None
+        clients = {}
+        for line in f:
+            if line.startswith('### Client '):
+                cur_client = line.removeprefix('### Client ').strip()
+                continue
+            if line.startswith('PublicKey = '):
+                clients[line.removeprefix('PublicKey = ').strip()] = cur_client
+                cur_client = None
+        return clients
 
 def byte2mib(byte: int) -> float:
     return byte / 1048576 # 1024 * 1024
@@ -153,33 +170,29 @@ def generate_plots_jinja(user_data: Dict[str, List[Dict[str, Union[str, List[int
 
 def main():
     def usage():
-        print("Args: <input log file> <output html file>"
+        print("Args: <wg conf file> <input log file> <output html file>"
               #" renderer - web (render html with plots) or plt (render plot images)"
         )
-    input_file = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    wgconf_file = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    if not wgconf_file.is_file():
+        print(f'file \'{wgconf_file}\' does not exist')
+        usage(); exit(1)
+    input_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
     if not input_file.is_file():
         print(f'file \'{input_file}\' does not exist')
         usage(); exit(1)
-    output_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+    output_file = Path(sys.argv[3]) if len(sys.argv) > 3 else None
     if output_file is None:
         print(f'output file required')
         usage(); exit(1)
 
-    """ renderer = sys.argv[2] if len(sys.argv) > 2 else None
-    if not renderer in ['web', 'plt']:
-        print(f'renderer \'{renderer}\' is invalid')
-        usage(); exit(1) """
-    renderer = 'web'
-
-    user_data = parse(input_file)
+    client_names = parse_wgconf(wgconf_file)
+    user_data = parse(input_file, client_names)
     for d in user_data.values():
         assert sum(x['diff'][0] for x in d if x['diff'][0] != -1) == d[-1]['total'][0]
         assert sum(x['diff'][1] for x in d if x['diff'][1] != -1) == d[-1]['total'][1]
     
-    if renderer == 'web':
-        generate_plots_jinja(user_data, output_file)
-    elif renderer == 'plt':
-        generate_plots_plt(user_data)
+    generate_plots_jinja(user_data, output_file)
 
 if __name__ == '__main__':
     main()

@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Wg stat</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1"></script>
         <style>
             .canv {
                 display:inline-block!important;
@@ -49,14 +51,41 @@
                         }]
                     },
                     options: {
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'MiB'
+                                }
+                            },
+                        },
                         plugins: {
                             title: {
                                 display: true,
                                 text: title
+                            },
+                            zoom: {
+                                limits: {
+                                    y: {min: 0}
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: 'x',
+                                },
+                                zoom: {
+                                    wheel: {
+                                        enabled: true
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'x'
+                                }
                             }
                         }
                     }
-                })}
+                })
+            }
                 {% for i in range(user_keys| length) -%}
                 draw_plot('chart_{{i}}_diff', 'Traffic by hour', 
                     {{user_stat[i]['x']}}, {{user_stat[i]['rcv_diff']}}, {{user_stat[i]['sent_diff']}});

@@ -3,6 +3,8 @@ html/
 plots/
 venv/
 
-traffic.log
+*.log
+out.html
 update_log.sh
-*.conf
+wg0.conf
+generate_stresstest_log.sh

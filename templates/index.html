@@ -7,6 +7,7 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
         <style>
             .canv {
                 display:inline-block!important;
@@ -58,6 +59,14 @@
                                     text: 'MiB'
                                 }
                             },
+                            x: {
+                                type: 'time',
+                                time: {
+                                    displayFormats: {
+                                        hour: 'MMM dd | HH:MM'
+                                    }
+                                }
+                            }
                         },
                         plugins: {
                             title: {

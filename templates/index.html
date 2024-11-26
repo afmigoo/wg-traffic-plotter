@@ -54,6 +54,7 @@
                     options: {
                         scales: {
                             y: {
+                                min: 0,
                                 title: {
                                     display: true,
                                     text: 'MiB'
@@ -61,6 +62,7 @@
                             },
                             x: {
                                 type: 'time',
+                                min: x.at(-24 * 3), // hardcoded 3 days limit, considering each day has 24 log entries
                                 time: {
                                     displayFormats: {
                                         hour: 'MMM dd | HH:mm'

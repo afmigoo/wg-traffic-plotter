@@ -5,7 +5,4 @@ plots/
 venv/
 
 *.log
-out.html
-update_log.sh
-wg0.conf
-generate_stresstest_log.sh
+wg*.conf

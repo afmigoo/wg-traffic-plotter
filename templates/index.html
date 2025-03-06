@@ -4,10 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Wg stat</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
         <style>
             .canv {
                 display:inline-block!important;
@@ -21,88 +18,43 @@
     </head>
     <body>
         <div>
-            {% for id in range(user_keys| length) -%}
-            <div>
-                <h3>{{user_keys[id]}}</h3>
-                <canvas class="canv" id="chart_{{id}}_diff"></canvas>
-                <canvas class="canv" id="chart_{{id}}_total"></canvas>
-            </div>
+            <h1>Usage summary</h1>
+            {% for key, summary in user_summary.items() -%}
+            <b><a href="user/{{key}}.html"><b>{{key}}</b></a></b>
+            <table>
+                <tr>
+                    <th>Period</th>
+                    <th>Sent by server</th>
+                    <th>Recieved by server</th>
+                </tr>
+                <tr>
+                    <td>Day</td>
+                    <td>{{summary['sent']['1d']}}</td>
+                    <td>{{summary['rcv']['1d']}}</td>
+                </tr>
+                <tr>
+                    <td>Week</td>
+                    <td>{{summary['sent']['1w']}}</td>
+                    <td>{{summary['rcv']['1w']}}</td>
+                </tr>
+                <tr>
+                    <td>Month</td>
+                    <td>{{summary['sent']['1m']}}</td>
+                    <td>{{summary['rcv']['1m']}}</td>
+                </tr>
+                <tr>
+                    <td>Year</td>
+                    <td>{{summary['sent']['1y']}}</td>
+                    <td>{{summary['rcv']['1y']}}</td>
+                </tr>
+                <tr>
+                    <td>All time</td>
+                    <td>{{summary['sent']['all']}}</td>
+                    <td>{{summary['rcv']['all']}}</td>
+                </tr>
+            </table>
+            <hr>
             {%- endfor %}
-        </div>
-        <script>
-            function draw_plot(plt_id, title, x, y_rcv, y_sent) {
-                const ctx = document.getElementById(plt_id);
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: x,
-                        datasets: [{
-                            label: 'Recieved',
-                            data: y_rcv,
-                            fill: false,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1
-                        },
-                        {
-                            label: 'Sent',
-                            data: y_sent,
-                            fill: false,
-                            borderColor: 'rgb(200, 50, 50)',
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                min: 0,
-                                title: {
-                                    display: true,
-                                    text: 'MiB'
-                                }
-                            },
-                            x: {
-                                type: 'time',
-                                min: x.at(-24 * 3), // hardcoded 3 days limit, considering each day has 24 log entries
-                                time: {
-                                    displayFormats: {
-                                        hour: 'MMM dd | HH:mm'
-                                    }
-                                }
-                            }
-                        },
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: title
-                            },
-                            zoom: {
-                                limits: {
-                                    y: {min: 0}
-                                },
-                                pan: {
-                                    enabled: true,
-                                    mode: 'x',
-                                },
-                                zoom: {
-                                    wheel: {
-                                        enabled: true
-                                    },
-                                    pinch: {
-                                        enabled: true
-                                    },
-                                    mode: 'x'
-                                }
-                            }
-                        }
-                    }
-                })
-            }
-                {% for i in range(user_keys| length) -%}
-                draw_plot('chart_{{i}}_diff', 'Traffic by hour', 
-                    {{user_stat[i]['x']}}, {{user_stat[i]['rcv_diff']}}, {{user_stat[i]['sent_diff']}});
-                draw_plot('chart_{{i}}_total', 'Total traffic', 
-                    {{user_stat[i]['x']}}, {{user_stat[i]['rcv_total']}}, {{user_stat[i]['sent_total']}});
-                {%- endfor %}
-          </script>          
+        </div>         
     </body>
 </html>

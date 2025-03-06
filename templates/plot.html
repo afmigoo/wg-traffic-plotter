@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Wg stat</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <style>
+            h3 {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <div>
+                <h3>{{user_key}}</h3>
+                <canvas class="canv" id="chart_diff"></canvas>
+                <!-- <canvas class="canv" id="chart_total"></canvas> -->
+                <a href="../index.html"><h3>Home</h3></a>               
+            </div>
+        </div>
+        <script>
+            function draw_plot(plt_id, title, x, y_rcv, y_sent) {
+                const ctx = document.getElementById(plt_id);
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: x,
+                        datasets: [{
+                            label: 'Recieved',
+                            data: y_rcv,
+                            fill: false,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Sent',
+                            data: y_sent,
+                            fill: false,
+                            borderColor: 'rgb(200, 50, 50)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                min: 0,
+                                title: {
+                                    display: true,
+                                    text: 'MiB'
+                                }
+                            },
+                            x: {
+                                type: 'time',
+                                min: x.at(-24 * 7), // hardcoded 7 days limit, considering each day has 24 log entries
+                                time: {
+                                    displayFormats: {
+                                        hour: 'MMM dd | HH:mm'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: title
+                            },
+                            zoom: {
+                                limits: {
+                                    y: {min: 0}
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: 'x',
+                                },
+                                zoom: {
+                                    wheel: {
+                                        enabled: true
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'x'
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+
+            draw_plot('chart_diff', 'Traffic by hour', 
+                {{user_stat['x']}}, {{user_stat['diff']['rcv']}}, {{user_stat['diff']['sent']}});
+          </script>
+    </body>
+</html>

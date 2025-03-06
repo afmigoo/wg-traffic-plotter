@@ -2,7 +2,7 @@
 
 root=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )
 python="$root/venv/bin/python3"
-script="$root/parse.py"
+script="$root/render.py"
 log_file="$root/traffic.log"
 wgconf_file='/etc/wireguard/wg0.conf'
 output_file="/hosted/wgstat/plots.html"

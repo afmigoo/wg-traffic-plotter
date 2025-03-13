@@ -9,19 +9,14 @@
         <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-        <style>
-            h3 {
-                text-align: center;
-            }
-        </style>
     </head>
     <body>
         <div>
             <div>
-                <h3>{{user_key}}</h3>
+                <h1>{{user_key}}</h1>
+                <a href="../index.html"><b>&larr; Back</b></a>  
                 <canvas class="canv" id="chart_diff"></canvas>
-                <!-- <canvas class="canv" id="chart_total"></canvas> -->
-                <a href="../index.html"><h3>Home</h3></a>               
+                <!-- <canvas class="canv" id="chart_total"></canvas> -->             
             </div>
         </div>
         <script>

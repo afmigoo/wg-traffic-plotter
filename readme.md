@@ -25,3 +25,9 @@ python3 render.py wg0.conf traffic.log mystats
 - Add `render.sh` to crontab as any user
 - Add `boot_log.sh` to crontab on system boot as any user. It will help script keep track of reboots since `wg show` data resets on reboots
 
+### How it looks
+Home page:
+![home page screenshot](home-page.jpg)
+
+Detailed user stats:
+![details page screenshot](details-page.jpg)
